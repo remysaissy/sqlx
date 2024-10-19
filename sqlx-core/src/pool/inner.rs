@@ -10,7 +10,7 @@ use crate::sync::{AsyncSemaphore, AsyncSemaphoreReleaser};
 
 use std::cmp;
 use std::future::Future;
-use std::sync::atomic::{AtomicBool, AtomicU32, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, RwLock};
 use std::task::Poll;
 
@@ -26,7 +26,7 @@ pub(crate) struct PoolInner<DB: Database> {
     pub(super) connect_options: RwLock<Arc<<DB::Connection as Connection>::Options>>,
     pub(super) idle_conns: ArrayQueue<Idle<DB>>,
     pub(super) semaphore: AsyncSemaphore,
-    pub(super) size: AtomicU32,
+    pub(super) size: AtomicUsize,
     pub(super) num_idle: AtomicUsize,
     is_closed: AtomicBool,
     pub(super) on_closed: event_listener::Event,
@@ -55,7 +55,7 @@ impl<DB: Database> PoolInner<DB> {
             connect_options: RwLock::new(Arc::new(connect_options)),
             idle_conns: ArrayQueue::new(capacity),
             semaphore: AsyncSemaphore::new(options.fair, semaphore_capacity),
-            size: AtomicU32::new(0),
+            size: AtomicUsize::new(0),
             num_idle: AtomicUsize::new(0),
             is_closed: AtomicBool::new(false),
             on_closed: event_listener::Event::new(),
@@ -71,7 +71,7 @@ impl<DB: Database> PoolInner<DB> {
         pool
     }
 
-    pub(super) fn size(&self) -> u32 {
+    pub(super) fn size(&self) -> usize {
         self.size.load(Ordering::Acquire)
     }
 
@@ -108,7 +108,8 @@ impl<DB: Database> PoolInner<DB> {
                 }
 
                 // Wait for all permits to be released.
-                let _permits = self.semaphore.acquire(permits).await;
+                #[allow(clippy::cast_possible_truncation)]
+                let _permits = self.semaphore.acquire(permits as u32).await;
             }
         }
     }
