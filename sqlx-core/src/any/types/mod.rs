@@ -22,6 +22,8 @@ mod bool;
 mod float;
 mod int;
 mod str;
+#[cfg(feature = "uuid")]
+mod uuid;
 
 #[test]
 fn test_type_impls() {
@@ -50,4 +52,7 @@ fn test_type_impls() {
     // These imply that there are also impls for the equivalent slice types.
     has_type::<Vec<u8>>();
     has_type::<String>();
+
+    #[cfg(feature = "uuid")]
+    has_type::<Uuid>();
 }

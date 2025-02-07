@@ -27,6 +27,8 @@ pub enum AnyTypeInfoKind {
     Double,
     Text,
     Blob,
+    #[cfg(feature = "uuid")]
+    Uuid,
 }
 
 impl TypeInfo for AnyTypeInfo {
@@ -47,6 +49,8 @@ impl TypeInfo for AnyTypeInfo {
             Text => "TEXT",
             Blob => "BLOB",
             Null => "NULL",
+            #[cfg(feature = "uuid")]
+            Uuid => "UUID",
         }
     }
 }

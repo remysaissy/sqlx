@@ -1,10 +1,10 @@
-use std::borrow::Cow;
-
 use crate::any::{Any, AnyTypeInfo, AnyTypeInfoKind};
 use crate::database::Database;
 use crate::error::BoxDynError;
 use crate::types::Type;
 use crate::value::{Value, ValueRef};
+use std::borrow::Cow;
+use uuid::Uuid;
 
 #[derive(Clone, Debug)]
 #[non_exhaustive]
@@ -18,6 +18,8 @@ pub enum AnyValueKind<'a> {
     Double(f64),
     Text(Cow<'a, str>),
     Blob(Cow<'a, [u8]>),
+    #[cfg(feature = "uuid")]
+    Uuid(Uuid),
 }
 
 impl AnyValueKind<'_> {
@@ -33,6 +35,8 @@ impl AnyValueKind<'_> {
                 AnyValueKind::Double(_) => AnyTypeInfoKind::Double,
                 AnyValueKind::Text(_) => AnyTypeInfoKind::Text,
                 AnyValueKind::Blob(_) => AnyTypeInfoKind::Blob,
+                #[cfg(feature = "uuid")]
+                AnyValueKind::Uuid(_) => AnyTypeInfoKind::Uuid,
             },
         }
     }
@@ -83,6 +87,8 @@ impl Value for AnyValue {
                 AnyValueKind::Double(d) => AnyValueKind::Double(*d),
                 AnyValueKind::Text(t) => AnyValueKind::Text(Cow::Borrowed(t)),
                 AnyValueKind::Blob(b) => AnyValueKind::Blob(Cow::Borrowed(b)),
+                #[cfg(feature = "uuid")]
+                AnyValueKind::Uuid(u) => AnyValueKind::Uuid(*u),
             },
         }
     }
@@ -111,6 +117,8 @@ impl<'a> ValueRef<'a> for AnyValueRef<'a> {
                 AnyValueKind::Double(d) => AnyValueKind::Double(*d),
                 AnyValueKind::Text(t) => AnyValueKind::Text(Cow::Owned(t.to_string())),
                 AnyValueKind::Blob(b) => AnyValueKind::Blob(Cow::Owned(b.to_vec())),
+                #[cfg(feature = "uuid")]
+                AnyValueKind::Uuid(u) => AnyValueKind::Uuid(*u),
             },
         }
     }
